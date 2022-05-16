@@ -1,11 +1,11 @@
-SELECT DISTINCT ?work ?authorLabel ?title ?publication_date WHERE {
+SELECT DISTINCT ?work ?authorLabel ?title ?publicationDate WHERE {
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
   ?work (p:P31/ps:P31/(wdt:P279*)) wd:Q7725634.
   MINUS { ?work (p:P31/ps:P31/(wdt:P279*)) wd:Q7725310. }
   ?work (p:P50/ps:P50) ?author.
   VALUES ?author { wd:Q65969383 wd:Q6774606 }
-  ?work wdt:P577 ?publication_date;
+  ?work wdt:P577 ?publicationDate;
     wdt:P1476 ?title.
 }
-ORDER BY DESC (?publication_date)
+ORDER BY DESC (?publicationDate)
 LIMIT 10

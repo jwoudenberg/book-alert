@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +13,21 @@ import _ "embed"
 
 //go:embed recent-publications.sparql
 var query string
+
+type sparqlResults struct {
+	Results struct {
+		Bindings []struct {
+			Work            sparqlValue
+			AuthorLabel     sparqlValue
+			Title           sparqlValue
+			PublicationDate sparqlValue
+		}
+	}
+}
+
+type sparqlValue struct {
+	Value string
+}
 
 func main() {
 	client := &http.Client{}
@@ -42,5 +58,12 @@ func main() {
 		log.Println("Unexpected response:", resp.Status)
 		return
 	}
-	fmt.Println(string(body))
+	var data sparqlResults
+	err2 := json.Unmarshal(body, &data)
+	if err2 != nil {
+		log.Println(err2)
+		return
+	}
+
+	fmt.Printf("%+v\n", data.Results.Bindings)
 }
