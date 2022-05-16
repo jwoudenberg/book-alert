@@ -8,14 +8,21 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 import _ "embed"
 
 //go:embed recent-publications.sparql
-var query string
+var queryTemplate string
 
 func main() {
+	authors := [2]string{"Q65969383", "Q6774606"}
+	var author_ids string
+	for _, author := range authors {
+		author_ids = fmt.Sprintf("%s wd:%s", author_ids, author)
+	}
+	query := strings.ReplaceAll(queryTemplate, "SPACE_SEPARATED_AUTHOR_IDS", author_ids)
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		"GET",
