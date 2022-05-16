@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -18,6 +19,15 @@ var queryTemplate string
 
 func main() {
 	authors := [2]string{"Q65969383", "Q6774606"}
+	feed, err := produceFeed(authors[:])
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Println(string(feed))
+}
+
+func produceFeed(authors []string) ([]byte, error) {
 	var author_ids string
 	for _, author := range authors {
 		author_ids = fmt.Sprintf("%s wd:%s", author_ids, author)
@@ -33,30 +43,25 @@ func main() {
 	req.Header.Add("Accept", "application/sparql-results+json")
 	req.Header.Add("User-Agent", "book-alert/0.1.0 (github.com/jwoudenberg/book-alert); book-alert@jasperwoudenberg.com)")
 	if err != nil {
-		log.Println(err)
-		return
+		return nil, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
-		return
+		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
-		return
+		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		log.Println("Unexpected response:", resp.Status)
-		return
+		return nil, errors.New("Unexpected response:" + resp.Status)
 	}
 	xml, err := rawSparqlToRawFeed(body)
 	if err != nil {
-		log.Println(err)
-		return
+		return nil, err
 	}
-	fmt.Println(string(xml))
+	return xml, nil
 }
 
 func rawSparqlToRawFeed(bytes []byte) ([]byte, error) {
