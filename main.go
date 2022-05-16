@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -18,13 +19,25 @@ import _ "embed"
 var queryTemplate string
 
 func main() {
-	authors := [2]string{"Q65969383", "Q6774606"}
-	feed, err := produceFeed(authors[:])
-	if err != nil {
-		log.Println(err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("not set: PORT")
 		return
 	}
-	fmt.Println(string(feed))
+
+	http.HandleFunc("/",
+		func(writer http.ResponseWriter, r *http.Request) {
+			authors := r.URL.Query()["author"]
+			feed, err := produceFeed(authors[:])
+			if err != nil {
+				log.Println(err)
+				http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+			writer.Header().Set("Content-Type", "application/atom+xml")
+			writer.Write(feed)
+		})
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
 
 func produceFeed(authors []string) ([]byte, error) {
